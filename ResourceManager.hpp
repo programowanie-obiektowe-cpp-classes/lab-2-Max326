@@ -6,10 +6,10 @@ class ResourceManager
 {
 public:
     // stealing a constructor from the resource class
-    ResourceManager() : resource(){};
+    ResourceManager() : resource(new Resource()){};
 
     ResourceManager(const ResourceManager& resourceManager)
-        : resource(resourceManager.resource){
+        : resource(new Resource(*resourceManager.resource)){
               // std::cout << "Resource manager copied." << std::endl;
           };
 
@@ -18,14 +18,15 @@ public:
         // std::cout << "Resource manager copied by assignment operator." << std::endl;
 
         if (this != &resourceManager) {
-            resource = resourceManager.resource;
+            delete resource;
+            resource = new Resource(*resourceManager.resource);
         }
         return *this;
     };
 
-    ResourceManager(ResourceManager&& resourceManager)
-        : resource(std::move(resourceManager.resource))
+    ResourceManager(ResourceManager&& resourceManager) : resource(resourceManager.resource)
     {
+        resourceManager.resource = nullptr;
         // std::cout << "Moving constructor ran." << std::endl;
     }
 
@@ -33,15 +34,21 @@ public:
     {
         // std::cout << "Moving assignment operator ran." << std::endl;
         if (this != &resourceManager) {
-            resource = std::move(resourceManager.resource);
+            delete resource;
+            resource                 = resourceManager.resource;
+            resourceManager.resource = nullptr;
         }
         return *this;
     }
 
-    ~ResourceManager(){/*std::cout << "Resource manager object destroyed." << std::endl;*/};
+    ~ResourceManager()
+    {
+        delete resource;
+        /*std::cout << "Resource manager object destroyed." << std::endl;*/
+    };
 
-    double get() { return resource.get(); }
+    double get() const { return resource->get(); }
 
 private:
-    Resource resource;
+    Resource* resource;
 };
